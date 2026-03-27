@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { useLang } from '../contexts/LanguageContext';
 
 export default function CSVUploader({ students, setStudents, onApplyDeskCount }) {
@@ -18,37 +19,62 @@ export default function CSVUploader({ students, setStudents, onApplyDeskCount })
     }
   };
 
+  const parseRows = (rows) => {
+    return rows
+      .map((row, i) => {
+        const name = row.name || row.Name || row['이름'] || row['姓名'] || '';
+        const genderRaw = (
+          row.gender || row.Gender || row['성별'] || row['性别'] || ''
+        ).trim().toUpperCase();
+        const gender = genderRaw.startsWith('F') || genderRaw === '여' || genderRaw === '女'
+          ? 'F' : 'M';
+        return { id: `s-${Date.now()}-${i}`, name: String(name).trim(), gender };
+      })
+      .filter((s) => s.name);
+  };
+
   const processCSV = (file) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        const parsed = results.data
-          .map((row, i) => {
-            const name = row.name || row.Name || row['이름'] || row['姓名'] || '';
-            const genderRaw = (
-              row.gender || row.Gender || row['성별'] || row['性别'] || ''
-            ).trim().toUpperCase();
-            const gender = genderRaw.startsWith('F') || genderRaw === '여' || genderRaw === '女'
-              ? 'F' : 'M';
-            return { id: `s-${Date.now()}-${i}`, name: name.trim(), gender };
-          })
-          .filter((s) => s.name);
-        setStudents(parsed);
+        setStudents(parseRows(results.data));
       },
     });
   };
 
+  const processXLSX = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+      setStudents(parseRows(rows));
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleFileUpload = (file) => {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'csv') {
+      processCSV(file);
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      processXLSX(file);
+    }
+  };
+
   const handleFile = (e) => {
     const file = e.target.files?.[0];
-    if (file) processCSV(file);
+    if (file) handleFileUpload(file);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.name.endsWith('.csv')) processCSV(file);
+    if (file) handleFileUpload(file);
   };
 
   const downloadSample = () => {
@@ -112,12 +138,12 @@ export default function CSVUploader({ students, setStudents, onApplyDeskCount })
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="drop-icon">📄</div>
-        <p>{t('dragDropCSV')}</p>
+        <p>{t('dragDropFile')}</p>
         <p className="drop-hint">{t('csvFormat')}</p>
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.xlsx,.xls"
           onChange={handleFile}
           style={{ display: 'none' }}
         />
