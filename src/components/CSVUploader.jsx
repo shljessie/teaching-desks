@@ -1,7 +1,8 @@
+import * as XLSX from 'xlsx';
+
 import { useRef, useState } from 'react';
 
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 import { useLang } from '../contexts/LanguageContext';
 
 export default function CSVUploader({ students, setStudents, onApplyDeskCount }) {

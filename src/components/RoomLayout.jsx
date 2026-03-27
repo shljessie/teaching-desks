@@ -206,16 +206,54 @@ export default function RoomLayout({
 
   const clearSeats = () => setSeatMap({});
 
+  const [dragOverPos, setDragOverPos] = useState(null);
+
   // Drag & drop
-  const handleDragStart = (student) => setDraggedStudent(student);
-  const handleDragOverSeat = (e) => e.preventDefault();
+  const handleDragStart = (student, e) => {
+    setDraggedStudent(student);
+    if (e && e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+  const handleDragOverSeat = (e, pos) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverPos(pos);
+  };
+  const handleDragLeaveSeat = () => {
+    setDragOverPos(null);
+  };
   const handleDropOnSeat = (pos) => {
     if (!draggedStudent) return;
     const newMap = { ...seatMap };
-    Object.keys(newMap).forEach((key) => { if (newMap[key] === draggedStudent.id) delete newMap[key]; });
+    // If dropping on a seat that already has someone, swap them
+    const existingStudentId = newMap[pos];
+    // Find where the dragged student was sitting (if anywhere)
+    const draggedFromPos = Object.keys(newMap).find((key) => newMap[key] === draggedStudent.id);
+    // Remove dragged student from old position
+    if (draggedFromPos) delete newMap[draggedFromPos];
+    // If there was someone in the target seat, move them to the dragged student's old seat
+    if (existingStudentId && draggedFromPos) {
+      newMap[draggedFromPos] = existingStudentId;
+    }
+    // Place dragged student in new seat
     newMap[pos] = draggedStudent.id;
     setSeatMap(newMap);
     setDraggedStudent(null);
+    setDragOverPos(null);
+  };
+  const handleDropOnUnassigned = (e) => {
+    e.preventDefault();
+    if (!draggedStudent) return;
+    const newMap = { ...seatMap };
+    Object.keys(newMap).forEach((key) => { if (newMap[key] === draggedStudent.id) delete newMap[key]; });
+    setSeatMap(newMap);
+    setDraggedStudent(null);
+    setDragOverPos(null);
+  };
+  const handleDragEnd = () => {
+    setDraggedStudent(null);
+    setDragOverPos(null);
   };
   const handleSeatClick = (pos) => {
     if (mode !== 'assign') return;
@@ -300,7 +338,11 @@ export default function RoomLayout({
 
       {/* ===== Unassigned students bar (visible in assign mode) ===== */}
       {mode === 'assign' && students.length > 0 && (
-        <div className="unassigned-bar">
+        <div
+          className={`unassigned-bar ${draggedStudent && !unassigned.find(s => s.id === draggedStudent.id) ? 'drop-target-active' : ''}`}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDropOnUnassigned}
+        >
           <span className="unassigned-label">{t('unassigned')} ({unassigned.length}):</span>
           <div className="unassigned-chips">
             {unassigned.map((s) => (
@@ -308,7 +350,8 @@ export default function RoomLayout({
                 key={s.id}
                 className={`student-card draggable ${s.gender === 'M' ? 'boy' : 'girl'}`}
                 draggable
-                onDragStart={() => handleDragStart(s)}
+                onDragStart={(e) => handleDragStart(s, e)}
+                onDragEnd={handleDragEnd}
               >
                 {s.gender === 'M' ? '👦' : '👧'} {s.name}
               </div>
@@ -404,11 +447,15 @@ export default function RoomLayout({
                 return (
                   <div
                     key={pos}
-                    className={`seat-cell desk-cell ${student ? (student.gender === 'M' ? 'occupied-boy' : 'occupied-girl') : 'vacant'}`}
-                    onDragOver={handleDragOverSeat}
+                    className={`seat-cell desk-cell ${student ? (student.gender === 'M' ? 'occupied-boy' : 'occupied-girl') : 'vacant'} ${dragOverPos === pos ? 'drag-over' : ''}`}
+                    draggable={!!student}
+                    onDragStart={(e) => student && handleDragStart(student, e)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOverSeat(e, pos)}
+                    onDragLeave={handleDragLeaveSeat}
                     onDrop={() => handleDropOnSeat(pos)}
                     onClick={() => handleSeatClick(pos)}
-                    title={student ? `${student.name} - ${t('clickToRemove')}` : t('seatEmpty')}
+                    title={student ? `${student.name} - ${t('dragToSwap')}` : t('seatEmpty')}
                   >
                     {student ? (
                       <div className="seated-student">

@@ -723,11 +723,46 @@ html, body {
 }
 .seat-cell.vacant:hover { background: #e8ecf5; border-color: var(--primary); }
 
-.seat-cell.occupied-boy { background: var(--boy-bg); border: 2px solid var(--boy-border); }
+.seat-cell.occupied-boy {
+  background: var(--boy-bg);
+  border: 2px solid var(--boy-border);
+  cursor: grab;
+}
 .seat-cell.occupied-boy:hover { background: #d0ebff; box-shadow: 0 2px 8px rgba(77, 171, 247, 0.3); }
+.seat-cell.occupied-boy:active { cursor: grabbing; }
 
-.seat-cell.occupied-girl { background: var(--girl-bg); border: 2px solid var(--girl-border); }
+.seat-cell.occupied-girl {
+  background: var(--girl-bg);
+  border: 2px solid var(--girl-border);
+  cursor: grab;
+}
 .seat-cell.occupied-girl:hover { background: #ffdeeb; box-shadow: 0 2px 8px rgba(240, 101, 149, 0.3); }
+.seat-cell.occupied-girl:active { cursor: grabbing; }
+
+/* Drag-over highlight on seats */
+.seat-cell.drag-over {
+  outline: 3px solid var(--primary) !important;
+  outline-offset: -3px;
+  background: #e0e7ff !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(79, 109, 245, 0.4);
+}
+
+/* Unassigned bar drop target highlight when dragging a seated student back */
+.unassigned-bar.drop-target-active {
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+  background: #eef2ff;
+}
+
+/* Draggable student cards */
+.student-card.draggable {
+  cursor: grab;
+}
+.student-card.draggable:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
 
 .seated-student {
   display: flex;

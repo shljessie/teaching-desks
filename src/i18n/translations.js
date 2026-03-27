@@ -70,6 +70,7 @@ const translations = {
     dragToAssign: 'Drag students to seats or use auto-assign buttons',
     seatEmpty: 'Empty',
     clickToRemove: 'Click to remove',
+    dragToSwap: 'Drag to move/swap, click to remove',
 
     // Chart title
     chartTitlePlaceholder: 'e.g. Jan Seating Chart – Ms. Kim\'s Class',
@@ -159,6 +160,7 @@ const translations = {
     dragToAssign: '학생을 자리에 끌어다 놓거나 자동 배정 버튼을 사용하세요',
     seatEmpty: '빈자리',
     clickToRemove: '클릭하여 제거',
+    dragToSwap: '드래그하여 이동/교환, 클릭하여 제거',
 
     // Chart title
     chartTitlePlaceholder: '예: 1월 자리배치표 – 복희 선생님 반',
@@ -248,6 +250,7 @@ const translations = {
     dragToAssign: '将学生拖到座位上或使用自动分配按钮',
     seatEmpty: '空位',
     clickToRemove: '点击移除',
+    dragToSwap: '拖动移动/交换，点击移除',
 
     // Chart title
     chartTitlePlaceholder: '例如：1月座位表 – 金老师班',
